@@ -1,0 +1,27 @@
+using BepInEx;
+using HarmonyLib;
+
+namespace {{MOD_NAMESPACE}}
+{
+    [BepInPlugin(PLUGIN_GUID, PLUGIN_NAME, PLUGIN_VERSION)]
+    public class Plugin : BaseUnityPlugin
+    {
+        public const string PLUGIN_GUID = "{{PLUGIN_GUID}}";
+        public const string PLUGIN_NAME = "{{MOD_PROJECT_NAME}}";
+        public const string PLUGIN_VERSION = "0.1.0";
+
+        private Harmony _harmony;
+
+        private void Awake()
+        {
+            _harmony = new Harmony(PLUGIN_GUID);
+            _harmony.PatchAll();
+            Logger.LogInfo($"[{PLUGIN_NAME}] Loaded successfully!");
+        }
+
+        private void OnDestroy()
+        {
+            _harmony?.UnpatchSelf();
+        }
+    }
+}

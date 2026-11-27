@@ -1,0 +1,14 @@
+---
+trigger: glob
+globs: "src/**/*.cs, src/**/*.csproj"
+description: "Стандарты C#-кода, BepInEx 5, Harmony-патчей и безопасного I/O в {{GAME_NAME}}"
+---
+
+# Архитектура и стандарты C# (`src/`)
+
+- **Карта проекта:** Перед работой в `src/` читай `src/ARCHITECTURE.md`. Обновляй её только при добавлении/удалении/переименовании файлов или изменении связей подсистем (`1 файл — 1 строка`).
+- **Модульность (1 фича = 1 папка):** `Plugin.cs` — только точка входа (`Awake`, регистрация конфигов, сервисов и Harmony). Новую механику выноси в `src/Features/<FeatureName>/` с локальным `README.md`.
+- **Тонкие Harmony-патчи:** Классы с `[HarmonyPatch]` лишь перехватывают вызов игры и делегируют логику сервисам; перед патчем пиши краткий `/// <summary>`.
+- **Конфигурируемость и декомпозиция:** Настройки выноси в `Config.Bind(...)`; методы <= 30–40 строк.
+- **Жизненный цикл Unity/BepInEx 5:** Постоянные `MonoBehaviour` крепи к `BepInEx.Bootstrap.Chainloader.ManagerObject` (или `DontDestroyOnLoad` с `HideFlags.HideAndDontSave`); в `BepInEx/config/BepInEx.cfg` рекомендуется `HideManagerGameObject = true`.
+- **Безопасный I/O:** Относительные пути через `BepInEx.Paths`, `Path.Combine`, `Directory.CreateDirectory`, проверка path traversal через `Path.GetFullPath` + `StartsWith(basePath)`.

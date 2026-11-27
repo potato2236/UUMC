@@ -1,0 +1,47 @@
+# Эталонная схема профиля целевой игры (uumc.profile.yaml)
+# Внимание: абсолютный путь к UUMC в профиле не хранится — CLI использует UUMC_ROOT или относительный путь.
+
+game:
+  name: "{{GAME_NAME}}"
+  exe_name: "{{GAME_EXE_NAME}}"
+  runtime: "{{UNITY_RUNTIME}}"           # mono | il2cpp (на старте поддерживается mono)
+  unity_version: "{{UNITY_VERSION}}"
+  game_dir: "{{GAME_DIR_REL}}"           # null (рекомендуется: задаётся в .uumc.local.yaml / UUMC_GAME_DIR) или относительный путь
+  decompiled_dir: null                   # опционально: относительный путь к декомпиляту (или null)
+  bepinex_hide_manager: {{HIDE_MANAGER}} # рекомендуется true в BepInEx/config/BepInEx.cfg
+
+mod:
+  project_name: "{{MOD_PROJECT_NAME}}"
+  assembly_name: "{{MOD_ASSEMBLY_NAME}}"
+  plugin_guid: "{{PLUGIN_GUID}}"
+  src_dir: "src"
+
+dev_mcp:
+  host: "127.0.0.1"
+  port: 27015
+  focus_patch_type: ""                   # опционально: класс игры для анти-паузы при расфокусе
+  focus_patch_method: "OnApplicationFocus"
+
+indexer:
+  symbols_file: "tools/game-indexer/symbols_raw.json"
+  cache_file: "tools/game-indexer/descriptions_cache.json"
+  taxonomy_file: "tools/game-indexer/taxonomy.yaml"
+  breaking_changes_file: "tools/game-indexer/breaking_changes.md"
+  docs_output_dir: "docs/game-internals"
+  runtime_registries_file: "tools/game-indexer/runtime_registries.json"
+  max_file_size_kb: 55.0
+  lm_studio_url: "http://localhost:1234/v1"
+  enricher_script: {{ENRICHER_SCRIPT}}     # опционально: путь к кастомному скрипту реестров
+
+testing:
+  start_scene_csharp: null               # опционально: C#-выражение загрузки тестовой сцены
+  ready_check_csharp: null               # опционально: C#-условие готовности мира/игрока
+  test_suites_dir: "tests"
+  window_size: "640x360"                 # размер зрительского окна при --launch
+  window_pos: "bottom-right"             # bottom-right | top-right | bottom-left | top-left
+  mute_audio: true                       # глушить звук во время автотестов (отключается --with-audio)
+
+linters:
+  excluded_dirs:
+    - "{{GAME_DIR_NAME}}"
+    - "decompiled"

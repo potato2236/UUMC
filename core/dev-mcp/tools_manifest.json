@@ -1,0 +1,833 @@
+{
+  "tools": [
+    {
+      "name": "read_logs",
+      "description": "Read recent Unity/BepInEx log messages captured by DevMCP. Use this to see console output, errors, warnings, and mod logs.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "description": "Number of recent log entries to retrieve (default: 100, max: 1000)",
+            "default": 100,
+            "minimum": 1,
+            "maximum": 1000
+          },
+          "filter": {
+            "type": "string",
+            "description": "Optional text filter - only returns logs containing this text (case-insensitive)"
+          },
+          "level": {
+            "type": "string",
+            "description": "Filter by log level",
+            "enum": [
+              "all",
+              "error",
+              "warning"
+            ]
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "clear_logs",
+      "description": "Clear the DevMCP log buffer. This removes all stored log messages.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "execute_csharp",
+      "description": "Evaluate reflection-based C# member chains, property assignments, and method calls at runtime in the Unity game context.\nHas access to all Unity namespaces and loaded game/mod assemblies.\n\nSupported syntax (reflection evaluator, NOT a Roslyn compiler):\n- Member/property/method chains: return UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;\n- Property/field assignment: UnityEngine.Time.timeScale = 1.0f\n- Variables from member calls: var go = UnityEngine.GameObject.Find(\"Player\"); return go.transform.position;\n- Generic static methods: UnityEngine.Object.FindObjectsOfType<UnityEngine.Camera>()\n\nLimitations: no arithmetic/boolean operators (+, &&, ?:), no lambdas/LINQ delegates, and no bare literal assignments (e.g. var x = 10;).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "C# code to execute. Should return a value or perform an action."
+          },
+          "timeout": {
+            "type": "integer",
+            "description": "Execution timeout in milliseconds (default: 5000, max: 30000)",
+            "default": 5000,
+            "minimum": 100,
+            "maximum": 30000
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "evaluate_expression",
+      "description": "Evaluate a simple C# expression (property access, method call, or assignment) and return the result.\n\nExamples:\n- \"UnityEngine.Time.time\"\n- \"UnityEngine.Application.productName\"\n- \"UnityEngine.QualitySettings.GetQualityLevel()\"",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "expression": {
+            "type": "string",
+            "description": "C# expression to evaluate"
+          }
+        },
+        "required": [
+          "expression"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_scene_info",
+      "description": "Get information about the currently loaded Unity scene including name, build index, and root object count.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "list_game_objects",
+      "description": "List GameObjects in the current scene hierarchy.\nReturns a tree structure of GameObjects with their components, active state, and children.\nUse depth parameter to control how deep to traverse (default: 2).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "depth": {
+            "type": "integer",
+            "description": "Maximum depth to traverse (default: 2, max: 5)",
+            "default": 2,
+            "minimum": 1,
+            "maximum": 5
+          },
+          "filter": {
+            "type": "string",
+            "description": "Optional name filter - only returns objects containing this text"
+          },
+          "activeOnly": {
+            "type": "boolean",
+            "description": "If true, only return active GameObjects (default: false)"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "find_game_object",
+      "description": "Find an active GameObject by Unity GameObject.Find path/name, or any GameObject by instanceId.\nPaths use '/' as separator (e.g., 'Canvas/Panel/Button').\nTo search inactive objects or match by substring, use list_game_objects or find_objects_of_type.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Path to the GameObject (e.g., 'Canvas/Panel/Button')"
+          },
+          "instanceId": {
+            "type": "integer",
+            "description": "Instance ID of the GameObject (alternative to path)"
+          },
+          "includeChildren": {
+            "type": "boolean",
+            "description": "Include child objects in result (default: true)"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "list_components",
+      "description": "List all components attached to a GameObject.\nReturns component type names, enabled state (for Behaviours), and instance IDs.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Path to the GameObject"
+          },
+          "instanceId": {
+            "type": "integer",
+            "description": "Instance ID of the GameObject (alternative to path)"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "inspect_component",
+      "description": "Inspect a component's properties, fields, and methods.\nReturns all public members and their values. Use includePrivate to also show private members.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "gameObjectPath": {
+            "type": "string",
+            "description": "Path to the GameObject containing the component"
+          },
+          "gameObjectId": {
+            "type": "integer",
+            "description": "Instance ID of the GameObject (alternative to path)"
+          },
+          "componentType": {
+            "type": "string",
+            "description": "Name or full name of the component type to inspect"
+          },
+          "componentIndex": {
+            "type": "integer",
+            "description": "Index of the component if multiple of same type exist (default: 0)"
+          },
+          "includePrivate": {
+            "type": "boolean",
+            "description": "Include private members (default: false)"
+          }
+        },
+        "required": [
+          "componentType"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "toggle_behaviour",
+      "description": "Enable or disable a MonoBehaviour component.\nThis controls whether the component receives Update, FixedUpdate, and other callbacks.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "gameObjectPath": {
+            "type": "string",
+            "description": "Path to the GameObject containing the behaviour"
+          },
+          "gameObjectId": {
+            "type": "integer",
+            "description": "Instance ID of the GameObject (alternative to path)"
+          },
+          "componentType": {
+            "type": "string",
+            "description": "Name of the MonoBehaviour type"
+          },
+          "componentIndex": {
+            "type": "integer",
+            "description": "Index if multiple components of same type (default: 0)"
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Set to true to enable, false to disable"
+          }
+        },
+        "required": [
+          "componentType",
+          "enabled"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "set_property",
+      "description": "Set a property or field value on a Unity object (GameObject or Component).\nSupports basic types (string, int, float, bool) and some Unity types (Vector3, Color).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "gameObjectPath": {
+            "type": "string",
+            "description": "Path to the GameObject"
+          },
+          "gameObjectId": {
+            "type": "integer",
+            "description": "Instance ID of the GameObject (alternative to path)"
+          },
+          "componentType": {
+            "type": "string",
+            "description": "Component type name (omit to set property on GameObject itself)"
+          },
+          "componentIndex": {
+            "type": "integer",
+            "description": "Index if multiple components of same type (default: 0)"
+          },
+          "propertyName": {
+            "type": "string",
+            "description": "Name of the property or field to set"
+          },
+          "value": {
+            "type": "string",
+            "description": "Value to set (will be parsed based on property type)"
+          }
+        },
+        "required": [
+          "propertyName",
+          "value"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "invoke_method",
+      "description": "Invoke a method on a Unity object (GameObject or Component).\nMethods can be called with arguments. The result is returned as text.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "gameObjectPath": {
+            "type": "string",
+            "description": "Path to the GameObject"
+          },
+          "gameObjectId": {
+            "type": "integer",
+            "description": "Instance ID of the GameObject (alternative to path)"
+          },
+          "componentType": {
+            "type": "string",
+            "description": "Component type name (omit to call method on GameObject)"
+          },
+          "componentIndex": {
+            "type": "integer",
+            "description": "Index if multiple components of same type (default: 0)"
+          },
+          "methodName": {
+            "type": "string",
+            "description": "Name of the method to invoke"
+          },
+          "arguments": {
+            "type": "array",
+            "description": "Arguments to pass to the method (as JSON array of strings)",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "methodName"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_game_info",
+      "description": "Get information about the running game including:\n- Game name, developer, version\n- Unity version and BepInEx version\n- Platform information\n- Current scene information\n- Screen resolution",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "take_screenshot",
+      "description": "Capture a screenshot of the current game view. Returns the image as base64-encoded PNG data.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "saveToFile": {
+            "type": "string",
+            "description": "Optional file path to save the screenshot (must resolve inside the game root directory)"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_time_info",
+      "description": "Get Unity time information including:\n- Current time, delta time, fixed delta time\n- Time scale (for slow-motion or pause detection)\n- Frame count\n- Real time since startup",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "list_assemblies",
+      "description": "List all assemblies loaded in the game process.\nThis includes Unity assemblies, game assemblies, and mod assemblies.\nUse the filter parameter to search for specific assemblies.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "filter": {
+            "type": "string",
+            "description": "Filter assemblies by name (case-insensitive)"
+          },
+          "includeSystem": {
+            "type": "boolean",
+            "description": "Include System.* and Microsoft.* assemblies (default: false)"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "list_types",
+      "description": "List types (classes, structs, enums, interfaces) in an assembly.\nUse filters to narrow down the results.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "assemblyName": {
+            "type": "string",
+            "description": "Name of the assembly to inspect"
+          },
+          "namespace": {
+            "type": "string",
+            "description": "Filter by namespace (partial match)"
+          },
+          "nameFilter": {
+            "type": "string",
+            "description": "Filter by type name (partial match)"
+          },
+          "typeKind": {
+            "type": "string",
+            "description": "Filter by type kind",
+            "enum": [
+              "all",
+              "class",
+              "struct",
+              "enum",
+              "interface"
+            ]
+          },
+          "baseType": {
+            "type": "string",
+            "description": "Filter by base type (e.g., 'MonoBehaviour')"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Maximum number of types to return (default: 100)",
+            "default": 100,
+            "minimum": 1,
+            "maximum": 1000
+          }
+        },
+        "required": [
+          "assemblyName"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_type_info",
+      "description": "Get detailed information about a specific type including:\n- Properties, fields, methods, constructors\n- Base type and interfaces\n- Static members",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "typeName": {
+            "type": "string",
+            "description": "Full name or simple name of the type"
+          },
+          "includePrivate": {
+            "type": "boolean",
+            "description": "Include non-public members (default: false)"
+          },
+          "includeInherited": {
+            "type": "boolean",
+            "description": "Include inherited members (default: false)"
+          }
+        },
+        "required": [
+          "typeName"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "find_objects_of_type",
+      "description": "Find all Unity objects of a specific type in the scene.\nUseful for finding all instances of a component type like 'Camera', 'Light', 'AudioSource', or custom game types.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "typeName": {
+            "type": "string",
+            "description": "The type name to search for (e.g., 'Camera', 'Light', 'MonoBehaviour')"
+          },
+          "includeInactive": {
+            "type": "boolean",
+            "description": "Include inactive objects (default: false)"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Maximum number of results (default: 50)",
+            "default": 50,
+            "minimum": 1,
+            "maximum": 500
+          }
+        },
+        "required": [
+          "typeName"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "set_time_scale",
+      "description": "Set the Unity time scale.\n0 = paused, 1 = normal speed, 0.5 = half speed, 2 = double speed.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "timeScale": {
+            "type": "number",
+            "description": "Time scale value (0 = pause, 1 = normal)"
+          }
+        },
+        "required": [
+          "timeScale"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "cursor_control",
+      "description": "Control the mouse cursor visibility and lock state.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "visible": {
+            "type": "boolean",
+            "description": "Set cursor visibility"
+          },
+          "lockState": {
+            "type": "string",
+            "description": "Set cursor lock state",
+            "enum": [
+              "None",
+              "Locked",
+              "Confined"
+            ]
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "load_scene",
+      "description": "Load a Unity scene by name or build index (single or additive).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sceneName": {
+            "type": "string",
+            "description": "Name of the scene to load"
+          },
+          "buildIndex": {
+            "type": "integer",
+            "description": "Build index of the scene (alternative to sceneName)"
+          },
+          "additive": {
+            "type": "boolean",
+            "description": "Load additively instead of replacing current scene (default: false)"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "instantiate_object",
+      "description": "Clone an existing GameObject at the same or specified position.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sourceGameObjectPath": {
+            "type": "string",
+            "description": "Path to the GameObject to clone"
+          },
+          "sourceGameObjectId": {
+            "type": "integer",
+            "description": "Instance ID of the GameObject to clone (alternative to path)"
+          },
+          "position": {
+            "type": "string",
+            "description": "Position for the new object as 'x,y,z' (optional)"
+          },
+          "newName": {
+            "type": "string",
+            "description": "Name for the new object (optional)"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "create_primitive",
+      "description": "Create a new primitive GameObject (Cube, Sphere, Capsule, Cylinder, Plane, Quad).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Type of primitive to create",
+            "enum": [
+              "Cube",
+              "Sphere",
+              "Capsule",
+              "Cylinder",
+              "Plane",
+              "Quad"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "description": "Name for the new object (optional)"
+          },
+          "position": {
+            "type": "string",
+            "description": "Position as 'x,y,z' (default: 0,0,0)"
+          },
+          "scale": {
+            "type": "string",
+            "description": "Scale as 'x,y,z' (default: 1,1,1)"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "set_transform",
+      "description": "Set the position, rotation (euler angles in degrees), or scale of a GameObject's transform.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "gameObjectPath": {
+            "type": "string",
+            "description": "Path to the GameObject"
+          },
+          "gameObjectId": {
+            "type": "integer",
+            "description": "Instance ID of the GameObject (alternative to path)"
+          },
+          "position": {
+            "type": "string",
+            "description": "New world position as 'x,y,z'"
+          },
+          "localPosition": {
+            "type": "string",
+            "description": "New local position as 'x,y,z'"
+          },
+          "rotation": {
+            "type": "string",
+            "description": "New euler angles as 'x,y,z' (degrees)"
+          },
+          "localRotation": {
+            "type": "string",
+            "description": "New local euler angles as 'x,y,z' (degrees)"
+          },
+          "scale": {
+            "type": "string",
+            "description": "New local scale as 'x,y,z'"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "inspect_material",
+      "description": "Inspect the material(s) on a GameObject's renderer (shader, color, texture info).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "gameObjectPath": {
+            "type": "string",
+            "description": "Path to the GameObject"
+          },
+          "gameObjectId": {
+            "type": "integer",
+            "description": "Instance ID of the GameObject (alternative to path)"
+          },
+          "materialIndex": {
+            "type": "integer",
+            "description": "Index of the material to inspect (default: all materials)"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "destroy_object",
+      "description": "Destroy a GameObject or component. WARNING: This cannot be undone!",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "gameObjectPath": {
+            "type": "string",
+            "description": "Path to the GameObject to destroy"
+          },
+          "gameObjectId": {
+            "type": "integer",
+            "description": "Instance ID of the GameObject (alternative to path)"
+          },
+          "componentType": {
+            "type": "string",
+            "description": "If specified, only destroy this component instead of the whole GameObject"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "add_game_knowledge",
+      "description": "Add a discovery to the game knowledge base.\nCategories include: 'console_commands', 'static_accessors', 'cheats', 'type_info', 'useful_methods', 'config', 'notes'.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "description": "Category of the discovery"
+          },
+          "key": {
+            "type": "string",
+            "description": "Unique identifier within the category"
+          },
+          "value": {
+            "type": "string",
+            "description": "The actual value/code/command that works"
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable description"
+          },
+          "example": {
+            "type": "string",
+            "description": "Example usage (optional)"
+          },
+          "tags": {
+            "type": "array",
+            "description": "Tags (optional)",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "category",
+          "key",
+          "value",
+          "description"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_game_knowledge",
+      "description": "Query the game knowledge base by category, search term, or list all stored games.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "description": "Specific category (optional)"
+          },
+          "search": {
+            "type": "string",
+            "description": "Search term (optional)"
+          },
+          "gameName": {
+            "type": "string",
+            "description": "Game name (optional, defaults to current game)"
+          },
+          "listGames": {
+            "type": "boolean",
+            "description": "List all games with stored knowledge"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_game_summary",
+      "description": "Get a quick summary of all stored knowledge for the current game.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "set_pseudocode_path",
+      "description": "Set the path to optional decompiled/pseudocode source for the current game.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Path to decompiled source directory (relative to game root or absolute)"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "search_pseudocode",
+      "description": "Search the game's optional decompiled source for type definitions, methods, or patterns.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Search query"
+          },
+          "filePattern": {
+            "type": "string",
+            "description": "File name pattern (default: '*.cs')"
+          },
+          "maxResults": {
+            "type": "integer",
+            "description": "Max results (default: 10)",
+            "default": 10,
+            "maximum": 50
+          },
+          "contextLines": {
+            "type": "integer",
+            "description": "Context lines around matches (default: 3)",
+            "default": 3,
+            "maximum": 20
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "read_pseudocode_file",
+      "description": "Read the contents of a specific file within the optional pseudocode directory.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "relativePath": {
+            "type": "string",
+            "description": "Relative path within pseudocode directory"
+          },
+          "startLine": {
+            "type": "integer",
+            "description": "Starting line number (1-based)"
+          },
+          "lineCount": {
+            "type": "integer",
+            "description": "Number of lines to read (max: 500)",
+            "default": 500,
+            "maximum": 500
+          }
+        },
+        "required": [
+          "relativePath"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

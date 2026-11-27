@@ -1,0 +1,60 @@
+#!/usr/bin/env python3
+"""
+Game-specific runtime registry enricher for {{GAME_NAME}}.
+
+Invoked automatically by UUMC (`core/indexer/enrich_base.py --profile uumc.profile.yaml`)
+when `indexer.enricher_script` points to this file.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+UUMC_ROOT = Path(os.environ["UUMC_ROOT"]).resolve() if os.environ.get("UUMC_ROOT") else None
+if UUMC_ROOT and str(UUMC_ROOT) not in sys.path:
+    sys.path.insert(0, str(UUMC_ROOT))
+
+from core.testing.mcp_client import DevMcpClient  # noqa: E402
+
+
+def collect_custom_registries(client: DevMcpClient) -> dict:
+    """Extend this function with execute_csharp queries for {{GAME_NAME}} registries."""
+    game_info = client.get_game_info()
+    return {
+        "source": "custom_enricher",
+        "collected_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
+        "game_info": game_info,
+        "registries": {},
+    }
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Сбор рантайм-реестров для {{GAME_NAME}}")
+    parser.add_argument("--host", default="127.0.0.1")
+    parser.add_argument("--port", type=int, default=27015)
+    parser.add_argument("--decompiled", type=Path, default=None)
+    parser.add_argument("--output", "-o", type=Path, required=True)
+    args = parser.parse_args()
+
+    client = DevMcpClient(host=args.host, port=args.port, client_name="uumc-custom-enricher")
+    if not client.connect():
+        print(f"[ERROR] Не удалось подключиться к DevMCP ({args.host}:{args.port})", file=sys.stderr)
+        sys.exit(1)
+
+    try:
+        payload = collect_custom_registries(client)
+    finally:
+        client.close()
+
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"[OK] Реестры сохранены в: {args.output}")
+
+
+if __name__ == "__main__":
+    main()

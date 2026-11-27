@@ -1,0 +1,41 @@
+# Игра и декомпилированные исходники
+{{GAME_DIR_GITIGNORE}}
+decompiled/
+
+# Локальная привязка UUMC к этой машине
+.uumc.local.yaml
+uumc.cmd
+*.Local.props
+
+# Сборка .NET / C#
+[Bb]in/
+[Oo]bj/
+*.user
+*.userosvprovider
+*.sln.docstates
+
+# IDE и редакторы
+.vs/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+*.suo
+
+# Логи, отчёты и скриншоты тестов
+*.log
+LogOutput.log
+crash.dmp
+*.png
+reports/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+venv/
+.venv/
+
+# ОС
+Thumbs.db
+Desktop.ini
+.DS_Store

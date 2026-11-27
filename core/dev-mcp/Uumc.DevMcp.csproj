@@ -1,0 +1,67 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>Uumc.DevMcp</AssemblyName>
+    <RootNamespace>Uumc.DevMcp</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <Target Name="ValidateUumcDependencies" BeforeTargets="ResolveAssemblyReferences">
+    <Error Condition="'$(ResolvedUumcBepInExCoreDir)' == '' or !Exists('$(ResolvedUumcBepInExCoreDir)\BepInEx.dll')"
+           Text="Не найден BepInEx.dll. Укажите папку игры через -p:UumcGameDir=&quot;...&quot; (или переменную UUMC_GAME_DIR), либо -p:UumcBepInExCoreDir=&quot;...&quot;." />
+    <Error Condition="'$(ResolvedUumcManagedDir)' == '' or (!Exists('$(ResolvedUumcManagedDir)\UnityEngine.dll') and !Exists('$(ResolvedUumcManagedDir)\UnityEngine.CoreModule.dll'))"
+           Text="Не найдены сборки Unity (*_Data\Managed). Укажите -p:UumcGameDir=&quot;...&quot; или -p:UumcManagedDir=&quot;...&quot;." />
+  </Target>
+
+  <ItemGroup>
+    <Reference Include="BepInEx">
+      <HintPath>$(ResolvedUumcBepInExCoreDir)\BepInEx.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(ResolvedUumcBepInExCoreDir)\0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <Reference Include="Newtonsoft.Json" Condition="Exists('$(ResolvedUumcManagedDir)\Newtonsoft.Json.dll')">
+      <HintPath>$(ResolvedUumcManagedDir)\Newtonsoft.Json.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json" Condition="!Exists('$(ResolvedUumcManagedDir)\Newtonsoft.Json.dll') and Exists('$(ResolvedUumcBepInExCoreDir)\Newtonsoft.Json.dll')">
+      <HintPath>$(ResolvedUumcBepInExCoreDir)\Newtonsoft.Json.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3"
+                      Condition="!Exists('$(ResolvedUumcManagedDir)\Newtonsoft.Json.dll') and !Exists('$(ResolvedUumcBepInExCoreDir)\Newtonsoft.Json.dll')" />
+
+    <Reference Include="UnityEngine" Condition="Exists('$(ResolvedUumcManagedDir)\UnityEngine.dll')">
+      <HintPath>$(ResolvedUumcManagedDir)\UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule" Condition="Exists('$(ResolvedUumcManagedDir)\UnityEngine.CoreModule.dll')">
+      <HintPath>$(ResolvedUumcManagedDir)\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.ScreenCaptureModule" Condition="Exists('$(ResolvedUumcManagedDir)\UnityEngine.ScreenCaptureModule.dll')">
+      <HintPath>$(ResolvedUumcManagedDir)\UnityEngine.ScreenCaptureModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.ImageConversionModule" Condition="Exists('$(ResolvedUumcManagedDir)\UnityEngine.ImageConversionModule.dll')">
+      <HintPath>$(ResolvedUumcManagedDir)\UnityEngine.ImageConversionModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule" Condition="Exists('$(ResolvedUumcManagedDir)\UnityEngine.IMGUIModule.dll')">
+      <HintPath>$(ResolvedUumcManagedDir)\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.Physics2DModule" Condition="Exists('$(ResolvedUumcManagedDir)\UnityEngine.Physics2DModule.dll')">
+      <HintPath>$(ResolvedUumcManagedDir)\UnityEngine.Physics2DModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>

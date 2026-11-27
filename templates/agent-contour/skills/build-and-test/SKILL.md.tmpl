@@ -1,0 +1,48 @@
+---
+name: build-and-test
+description: Собирает C#-проект мода, деплоит DLL в BepInEx/plugins и запускает проверку через UUMC DevMCP.
+---
+
+# Сборка и тестирование мода ({{GAME_NAME}})
+
+## 1. Сборка и деплой
+
+Команда `build` автоматически синхронизирует `src/Directory.Build.Local.props`, собирает `src/{{MOD_CSPROJ}}` и копирует `{{MOD_ASSEMBLY_NAME}}.dll` в `BepInEx/plugins/{{MOD_ASSEMBLY_NAME}}/`:
+
+```powershell
+.\uumc.cmd build
+# Если игра запущена и блокирует DLL:
+.\uumc.cmd build --kill-existing
+```
+
+*(Локальные пути к игре и ядру UUMC задаются в `.uumc.local.yaml`; после `git clone` на новой машине выполните `uumc link --game-dir "<путь к игре>"`.)*
+
+## 2. Проверка в рантайме через UUMC (`Uumc.DevMcp`)
+
+`.\uumc.cmd test --launch` автоматически синхронизирует порт `dev_mcp.port` в `BepInEx/config/com.uumc.devmcp.cfg` перед запуском игры:
+
+```powershell
+# Автозапуск в зрительском мини-окне (без кражи фокуса/кликов, без звука), smoke-проверка и аудит LogOutput.log
+.\uumc.cmd test --launch --kill-existing --smoke --check-log
+
+# Интерактивный режим со звуком (при необходимости ручного взаимодействия с окном)
+.\uumc.cmd test --launch --kill-existing --interactive --with-audio --smoke
+```
+
+## 3. Нативный MCP в IDE (`uumc-devmcp`)
+
+Для прямого доступа к 33 инструментам `Uumc.DevMcp` из агента IDE без обёртки CLI получите готовый фрагмент для `mcp_config.json`:
+
+```powershell
+.\uumc.cmd mcp --print-config
+```
+
+`stdio`-мост поддерживает работу до запуска игры и автоматически переподключается при её перезапуске.
+
+## 4. Индексация и обновление базы знаний
+
+```powershell
+.\uumc.cmd index
+.\uumc.cmd sync --no-ai
+.\uumc.cmd render
+```

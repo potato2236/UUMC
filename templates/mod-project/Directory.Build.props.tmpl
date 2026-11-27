@@ -1,0 +1,35 @@
+<Project>
+  <PropertyGroup>
+    <!-- Приоритет: -p:UumcGameDir=... -> env UUMC_GAME_DIR -> Directory.Build.Local.props -> дефолт из профиля -->
+    <_UumcRawGameDir>$(UumcGameDir)</_UumcRawGameDir>
+    <_UumcRawGameDir Condition="'$(_UumcRawGameDir)' == ''">$(UUMC_GAME_DIR)</_UumcRawGameDir>
+    <_UumcDefaultRelGameDir>{{GAME_DIR_PROPS}}</_UumcDefaultRelGameDir>
+
+    <_UumcBaseDir Condition="'$(MSBuildStartupDirectory)' != ''">$(MSBuildStartupDirectory)</_UumcBaseDir>
+    <_UumcBaseDir Condition="'$(_UumcBaseDir)' == ''">$(MSBuildThisFileDirectory)..</_UumcBaseDir>
+  </PropertyGroup>
+
+  <Import Project="$(MSBuildThisFileDirectory)Directory.Build.Local.props"
+          Condition="Exists('$(MSBuildThisFileDirectory)Directory.Build.Local.props')" />
+
+  <PropertyGroup>
+    <_UumcResolvedSourceDir Condition="'$(_UumcRawGameDir)' != ''">$(_UumcRawGameDir)</_UumcResolvedSourceDir>
+    <_UumcResolvedSourceBase Condition="'$(_UumcRawGameDir)' != ''">$(_UumcBaseDir)</_UumcResolvedSourceBase>
+
+    <_UumcResolvedSourceDir Condition="'$(_UumcResolvedSourceDir)' == '' and '$(UumcGameDir)' != ''">$(UumcGameDir)</_UumcResolvedSourceDir>
+    <_UumcResolvedSourceBase Condition="'$(_UumcResolvedSourceBase)' == '' and '$(UumcGameDir)' != ''">$(MSBuildThisFileDirectory)..</_UumcResolvedSourceBase>
+
+    <_UumcResolvedSourceDir Condition="'$(_UumcResolvedSourceDir)' == '' and '$(_UumcDefaultRelGameDir)' != ''">$(_UumcDefaultRelGameDir)</_UumcResolvedSourceDir>
+    <_UumcResolvedSourceBase Condition="'$(_UumcResolvedSourceBase)' == '' and '$(_UumcDefaultRelGameDir)' != ''">$(MSBuildThisFileDirectory)..</_UumcResolvedSourceBase>
+
+    <_UumcCombinedGameDir Condition="'$(_UumcResolvedSourceDir)' != '' and !$([System.IO.Path]::IsPathRooted('$(_UumcResolvedSourceDir)'))">$([System.IO.Path]::Combine('$(_UumcResolvedSourceBase)', '$(_UumcResolvedSourceDir)'))</_UumcCombinedGameDir>
+    <_UumcCombinedGameDir Condition="'$(_UumcCombinedGameDir)' == ''">$(_UumcResolvedSourceDir)</_UumcCombinedGameDir>
+    <ResolvedUumcGameDir Condition="'$(_UumcCombinedGameDir)' != ''">$([System.IO.Path]::GetFullPath('$(_UumcCombinedGameDir)').TrimEnd('\').TrimEnd('/'))</ResolvedUumcGameDir>
+
+    <ResolvedUumcBepInExCoreDir Condition="'$(ResolvedUumcGameDir)' != '' and Exists('$(ResolvedUumcGameDir)\BepInEx\core')">$(ResolvedUumcGameDir)\BepInEx\core</ResolvedUumcBepInExCoreDir>
+
+    <_UumcDataDirs Condition="'$(ResolvedUumcGameDir)' != '' and Exists('$(ResolvedUumcGameDir)')">$([System.IO.Directory]::GetDirectories('$(ResolvedUumcGameDir)', '*_Data'))</_UumcDataDirs>
+    <_UumcFirstDataDir Condition="'$(_UumcDataDirs)' != ''">$([System.String]::Copy('$(_UumcDataDirs)').Split(';')[0])</_UumcFirstDataDir>
+    <ResolvedUumcManagedDir Condition="'$(_UumcFirstDataDir)' != '' and Exists('$(_UumcFirstDataDir)\Managed')">$(_UumcFirstDataDir)\Managed</ResolvedUumcManagedDir>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,17 @@
+# Архитектура C#-проекта (`src/`)
+
+Мод для Unity-игры *{{GAME_NAME}}* на базе BepInEx 5 (`netstandard2.1`) и Harmony.
+
+## Карта файлов
+
+```text
+src/
+├── ARCHITECTURE.md                              # Входная структурная карта и связи подсистем
+├── Directory.Build.props                        # Разрешение путей к BepInEx и Managed-сборкам игры
+├── {{MOD_CSPROJ}}                               # Основной проект мода ({{MOD_ASSEMBLY_NAME}}.dll)
+└── Plugin.cs                                    # Точка входа BepInEx: инициализация конфига и Harmony
+```
+
+## Связи подсистем
+
+- `Plugin.Awake()` применяет `[HarmonyPatch]` и регистрирует фичи из `src/Features/<FeatureName>/`.

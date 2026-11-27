@@ -1,0 +1,19 @@
+#!/usr/bin/env python3
+r"""
+Базовый smoke-сценарий для {{GAME_NAME}} ({{MOD_PROJECT_NAME}}).
+
+Запуск:
+  .\uumc.cmd test --launch --kill-existing --script tests/test_smoke_example.py --screenshot shot.png --check-log
+"""
+
+from __future__ import annotations
+
+from core.testing.mcp_client import DevMcpClient
+
+
+def run_test(client: DevMcpClient) -> None:
+    """Проверяет, что игра запущена и DevMCP отвечает на базовые запросы."""
+    game_info = client.get_game_info()
+    scene_info = client.call_tool("get_scene_info")
+    print(f"[smoke] Игра: {game_info}")
+    print(f"[smoke] Сцена: {scene_info}")

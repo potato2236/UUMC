@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>{{MOD_ASSEMBLY_NAME}}</AssemblyName>
+    <RootNamespace>{{MOD_NAMESPACE}}</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <Target Name="ValidateGameDependencies" BeforeTargets="ResolveAssemblyReferences">
+    <Error Condition="'$(ResolvedUumcBepInExCoreDir)' == '' or !Exists('$(ResolvedUumcBepInExCoreDir)\BepInEx.dll')"
+           Text="Не найден BepInEx.dll. Укажите папку игры через -p:UumcGameDir=&quot;...&quot; или переменную UUMC_GAME_DIR." />
+    <Error Condition="'$(ResolvedUumcManagedDir)' == '' or !Exists('$(ResolvedUumcManagedDir)\Assembly-CSharp.dll')"
+           Text="Не найден Assembly-CSharp.dll в *_Data\Managed. Укажите -p:UumcGameDir=&quot;...&quot; или UUMC_GAME_DIR." />
+  </Target>
+
+  <ItemGroup>
+    <Reference Include="BepInEx">
+      <HintPath>$(ResolvedUumcBepInExCoreDir)\BepInEx.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(ResolvedUumcBepInExCoreDir)\0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(ResolvedUumcManagedDir)\Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine" Condition="Exists('$(ResolvedUumcManagedDir)\UnityEngine.dll')">
+      <HintPath>$(ResolvedUumcManagedDir)\UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule" Condition="Exists('$(ResolvedUumcManagedDir)\UnityEngine.CoreModule.dll')">
+      <HintPath>$(ResolvedUumcManagedDir)\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule" Condition="Exists('$(ResolvedUumcManagedDir)\UnityEngine.IMGUIModule.dll')">
+      <HintPath>$(ResolvedUumcManagedDir)\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>
